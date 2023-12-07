@@ -6,36 +6,23 @@ import java.util.*;
 
 public class Splitter {
 
-    private static int findSplitSize(File file) throws FileNotFoundException {
-        int size = 0;
-        Scanner source = new Scanner(file);
-        while (source.hasNext()) {
-            String line = source.nextLine();
-            if (line.contains("ASSESSMENT")) {
-                size++;
-            }
-        }
-        source.close();
-        return size;
-    }
-
-    private static ArrayList<AbstractMap.SimpleEntry<Command, Integer>> createCommands(ArrayList<String> lines) {
-        ArrayList<AbstractMap.SimpleEntry<Command, Integer>> commands = new ArrayList<>();
+    private static ArrayList<Pair<Command, Integer>> createCommands(ArrayList<String> lines) {
+        ArrayList<Pair<Command, Integer>> commands = new ArrayList<>();
         for (int i = 1; i < lines.size() - 1; i++) {
             if ((lines.get(i).contains("while") || lines.get(i).contains("if") || lines.get(i).contains("for")) && lines.get(i).contains("{")) {
-                commands.add(new AbstractMap.SimpleEntry<>(Command.OPEN, i));
+                commands.add(new Pair<>(Command.OPEN, i));
             } else if (lines.get(i).contains("}")) {
-                commands.add(new AbstractMap.SimpleEntry<>(Command.CLOSE, i));
+                commands.add(new Pair<>(Command.CLOSE, i));
             } else {
                 if (!lines.get(i).isEmpty()) {
-                    commands.add(new AbstractMap.SimpleEntry<>(Command.STATEMENT, i));
+                    commands.add(new Pair<>(Command.STATEMENT, i));
                 }
             }
         }
         return commands;
     }
 
-    private static AbstractMap.SimpleEntry<Integer, Integer> solve(int curIndex, ArrayList<AbstractMap.SimpleEntry<Command, Integer>> commands, ArrayList<Integer> splitLines) {
+    private static Pair<Integer, Integer> solve(int curIndex, ArrayList<Pair<Command, Integer>> commands, ArrayList<Integer> splitLines) {
         ArrayList<Integer> tmp = new ArrayList<>();
         for (int i = curIndex + 1; i < commands.size(); i++) {
             if (commands.get(i).getKey().equals(Command.CLOSE)) {
@@ -45,18 +32,18 @@ public class Splitter {
                             splitLines.add(integer);
                         }
                     }
-                    return new AbstractMap.SimpleEntry<>(commands.get(curIndex).getValue(), i);
+                    return new Pair<>(commands.get(curIndex).getValue(), i);
                 }
-                return new AbstractMap.SimpleEntry<>(-1, i);
+                return new Pair<>(-1, i);
             } else if (commands.get(i).getKey().equals(Command.OPEN)) {
-                AbstractMap.SimpleEntry<Integer, Integer> entry = solve(i, commands, splitLines);
+                Pair<Integer, Integer> entry = solve(i, commands, splitLines);
                 tmp.add(entry.getKey());
                 i = entry.getValue();
             } else {
                 tmp.add(commands.get(i).getValue());
             }
         }
-        return new AbstractMap.SimpleEntry<>(-1, -1);
+        return new Pair<>(-1, -1);
     }
 
     public static ArrayList<Integer> split(File file) throws FileNotFoundException {
@@ -69,10 +56,10 @@ public class Splitter {
             lines.add(line);
         }
         source.close();
-        ArrayList<AbstractMap.SimpleEntry<Command, Integer>> commands = createCommands(lines);
+        ArrayList<Pair<Command, Integer>> commands = createCommands(lines);
         for (int i = 0; i < commands.size(); i++) {
             if (commands.get(i).getKey().equals(Command.OPEN)) {
-                AbstractMap.SimpleEntry<Integer, Integer> sol = solve(i, commands, splitLines);
+                Pair<Integer, Integer> sol = solve(i, commands, splitLines);
                 if (sol.getKey() != -1) {
                     splitLines.add(commands.get(i).getValue());
                 }

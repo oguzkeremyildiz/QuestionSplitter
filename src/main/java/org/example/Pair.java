@@ -28,6 +28,6 @@ public class Pair<K, V> {
 
     @Override
     public Pair<K, V> clone() throws CloneNotSupportedException {
-        return (Pair<K, V>) super.clone();
+        return new Pair<>(this.key, this.value);
     }
 }

@@ -8,19 +8,6 @@ import java.util.Scanner;
 
 public class CodeAssessment {
 
-    private static int findSplitSize(File file) throws FileNotFoundException {
-        int size = 0;
-        Scanner source = new Scanner(file);
-        while (source.hasNext()) {
-            String line = source.nextLine();
-            if (line.contains("ASSESSMENT")) {
-                size++;
-            }
-        }
-        source.close();
-        return size;
-    }
-
     private static ArrayList<Integer> findCandidates(ArrayList<Integer> possibilities, ArrayList<Integer> splits) {
         ArrayList<Integer> candidates = new ArrayList<>();
         int i = 0;
@@ -33,15 +20,15 @@ public class CodeAssessment {
         return candidates;
     }
 
-    private static Pair<ArrayList<Integer>, Double> backtrack(int splitSize, ArrayList<Integer> splits, PointCalculator calculator, ArrayList<Integer> possibilities) throws CloneNotSupportedException {
+    private static Pair<ArrayList<Integer>, Double> backtrack(ArrayList<Integer> splits, PointCalculator calculator, ArrayList<Integer> possibilities, ArrayList<String> codeLines) throws CloneNotSupportedException {
         ArrayList<Integer> candidates = findCandidates(possibilities, splits);
-        if (candidates.isEmpty() || splitSize == splits.size()) {
-            return new Pair<>((ArrayList<Integer>) splits.clone(), calculator.calculate());
+        if (candidates.isEmpty() || calculator.refCodeSize() == splits.size()) {
+            return new Pair<>((ArrayList<Integer>) splits.clone(), calculator.calculate(splits, codeLines));
         }
-        Pair<ArrayList<Integer>, Double> pair = new Pair<>(null, Double.MIN_VALUE);
+        Pair<ArrayList<Integer>, Double> pair = new Pair<>(null, (double) Integer.MIN_VALUE);
         for (Integer candidate : candidates) {
             splits.add(candidate);
-            Pair<ArrayList<Integer>, Double> p = backtrack(splitSize, splits, calculator, possibilities);
+            Pair<ArrayList<Integer>, Double> p = backtrack(splits, calculator, possibilities, codeLines);
             if (pair.getValue() < p.getValue()) {
                 pair = p.clone();
             }
@@ -50,14 +37,21 @@ public class CodeAssessment {
         return pair;
     }
 
-    public static ArrayList<ArrayList<Integer>> calculateBestSplits(String folderName) throws FileNotFoundException, CloneNotSupportedException {
-        int splitSize = findSplitSize(new File(folderName + "/RefCode.java"));
+    public static ArrayList<ArrayList<Integer>> calculateBestSplits(String folderName, PointCalculator calculator) throws FileNotFoundException, CloneNotSupportedException {
         File folder = new File(folderName);
         File[] listOfFiles = folder.listFiles();
         ArrayList<ArrayList<Integer>> splitLines = new ArrayList<>();
         for (int i = 0; i < Objects.requireNonNull(listOfFiles).length; i++) {
             if (listOfFiles[i].isFile()) {
-                splitLines.add(backtrack(splitSize, new ArrayList<>(), new DummyCalculator(), Splitter.split(listOfFiles[i])).getKey());
+                ArrayList<String> codeLines = new ArrayList<>();
+                Scanner source = new Scanner(listOfFiles[i]);
+                while (source.hasNext()) {
+                    codeLines.add(source.nextLine());
+                }
+                source.close();
+                Pair<ArrayList<Integer>, Double> bestPair = backtrack(new ArrayList<>(), calculator, Splitter.split(codeLines), codeLines);
+                splitLines.add(bestPair.getKey());
+                //System.out.println(listOfFiles[i].getName() + " is done with " + bestPair.getValue() + " accuracy.");
             }
         }
         return splitLines;

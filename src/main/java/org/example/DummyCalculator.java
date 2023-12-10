@@ -1,9 +1,16 @@
 package org.example;
 
-public class DummyCalculator implements PointCalculator{
+import java.util.ArrayList;
+
+public class DummyCalculator implements PointCalculator {
 
     @Override
-    public double calculate() {
+    public double calculate(ArrayList<Integer> splits, ArrayList<String> file) {
         return Math.random();
+    }
+
+    @Override
+    public int refCodeSize() {
+        return (int )(Math.random() * 6);
     }
 }

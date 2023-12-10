@@ -46,16 +46,9 @@ public class Splitter {
         return new Pair<>(-1, -1);
     }
 
-    public static ArrayList<Integer> split(File file) throws FileNotFoundException {
+    public static ArrayList<Integer> split(ArrayList<String> lines) {
         ArrayList<Integer> splitLines = new ArrayList<>();
         splitLines.add(0);
-        Scanner source = new Scanner(file);
-        ArrayList<String> lines = new ArrayList<>();
-        while (source.hasNext()) {
-            String line = source.nextLine();
-            lines.add(line);
-        }
-        source.close();
         ArrayList<Pair<Command, Integer>> commands = createCommands(lines);
         for (int i = 0; i < commands.size(); i++) {
             if (commands.get(i).getKey().equals(Command.OPEN)) {
@@ -78,7 +71,14 @@ public class Splitter {
         ArrayList<ArrayList<Integer>> splitLines = new ArrayList<>();
         for (int i = 0; i < Objects.requireNonNull(listOfFiles).length; i++) {
             if (listOfFiles[i].isFile()) {
-                splitLines.add(split(listOfFiles[i]));
+                Scanner source = new Scanner(listOfFiles[i]);
+                ArrayList<String> lines = new ArrayList<>();
+                while (source.hasNext()) {
+                    String line = source.nextLine();
+                    lines.add(line);
+                }
+                source.close();
+                splitLines.add(split(lines));
             }
         }
         return splitLines;

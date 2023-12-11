@@ -17,6 +17,9 @@ public class LineCalculator extends BaseCalculator {
             total -= Math.abs((splits.get(i + 1) - splits.get(i)) - refCodeList.get(i).size());
         }
         total -= Math.abs((file.size() - splits.get(splits.size() - 1)) - refCodeList.get(splits.size() - 1).size());
+        for (int i = splits.size(); i < refCodeList.size(); i++) {
+            total -= refCodeList.get(i).size();
+        }
         return total;
     }
 }

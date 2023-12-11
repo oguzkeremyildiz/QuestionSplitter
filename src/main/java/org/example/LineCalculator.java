@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
-public class LineCalculator extends BaseCalculator {
+public class LineCalculator extends PointCalculator {
 
     public LineCalculator(File refCode) throws FileNotFoundException {
         super(refCode);

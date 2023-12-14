@@ -43,7 +43,7 @@ public class CodeAssessment {
         File[] listOfFiles = folder.listFiles();
         ArrayList<ArrayList<Integer>> splitLines = new ArrayList<>();
         for (int i = 0; i < Objects.requireNonNull(listOfFiles).length; i++) {
-            if (listOfFiles[i].isFile()) {
+            if (listOfFiles[i].isFile() && !listOfFiles[i].getName().equals("RefCode.java")) {
                 ArrayList<String> codeLines = new ArrayList<>();
                 Scanner source = new Scanner(listOfFiles[i]);
                 while (source.hasNext()) {

@@ -9,7 +9,7 @@ public class Splitter {
     private static ArrayList<Pair<Command, Integer>> createCommands(ArrayList<String> lines) {
         ArrayList<Pair<Command, Integer>> commands = new ArrayList<>();
         for (int i = 1; i < lines.size() - 1; i++) {
-            if ((lines.get(i).contains("while") || lines.get(i).contains("if") || lines.get(i).contains("for")) && lines.get(i).contains("{")) {
+            if (lines.get(i).contains("{")) {
                 commands.add(new Pair<>(Command.OPEN, i));
             } else if (lines.get(i).contains("}")) {
                 commands.add(new Pair<>(Command.CLOSE, i));

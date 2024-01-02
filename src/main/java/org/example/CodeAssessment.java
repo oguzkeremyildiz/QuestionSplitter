@@ -50,14 +50,20 @@ public class CodeAssessment {
                     codeLines.add(source.nextLine());
                 }
                 source.close();
-                ArrayList<Integer> possibilities = Splitter.split(codeLines);
-                HashMap<Integer, Integer> map = new HashMap<>();
-                for (int j = 0; j < possibilities.size(); j++) {
-                    map.put(possibilities.get(j), j);
+                try {
+                    ArrayList<Integer> possibilities = Splitter.split(codeLines);
+                    HashMap<Integer, Integer> map = new HashMap<>();
+                    for (int j = 0; j < possibilities.size(); j++) {
+                        map.put(possibilities.get(j), j);
+                    }
+                    Pair<ArrayList<Integer>, Double> bestPair = backtrack(new ArrayList<>(), calculator, possibilities, codeLines, map);
+                    splitLines.add(bestPair.getKey());
+                    System.out.println(listOfFiles[i].getName() + " is done with " + bestPair.getValue() + " accuracy.");
+                } catch (OutOfMemoryError e) {
+                    System.out.println(listOfFiles[i].getName() + " is passed.");
+                } catch (BracesNotMatchException e) {
+                    throw new RuntimeException(e);
                 }
-                Pair<ArrayList<Integer>, Double> bestPair = backtrack(new ArrayList<>(), calculator, possibilities, codeLines, map);
-                splitLines.add(bestPair.getKey());
-                //System.out.println(listOfFiles[i].getName() + " is done with " + bestPair.getValue() + " accuracy.");
             }
         }
         return splitLines;

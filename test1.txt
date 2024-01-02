@@ -1,0 +1,31 @@
+public static void test()
+{
+if(){
+if(){
+a
+}
+if()
+{
+a
+b
+}
+}
+if(){
+if(){
+a
+}
+if() {
+a
+}
+} else if () {
+if(){
+a
+}
+if() {
+a
+}
+} else {
+a
+b
+}
+}

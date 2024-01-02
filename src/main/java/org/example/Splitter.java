@@ -43,7 +43,7 @@ public class Splitter {
         return commands;
     }
 
-    private static Pair<Integer, Integer> solve(int curIndex, ArrayList<Pair<Command, Integer>> commands, ArrayList<Integer> splitLines) {
+    private static int solve(int curIndex, ArrayList<Pair<Command, Integer>> commands, ArrayList<Integer> splitLines) {
         ArrayList<Integer> tmp = new ArrayList<>();
         for (int i = curIndex + 1; i < commands.size(); i++) {
             if (commands.get(i).getKey().equals(Command.CLOSE)) {
@@ -53,18 +53,17 @@ public class Splitter {
                             splitLines.add(integer);
                         }
                     }
-                    return new Pair<>(commands.get(curIndex).getValue(), i);
+                    splitLines.add(commands.get(curIndex).getValue());
                 }
-                return new Pair<>(-1, i);
+                return i;
             } else if (commands.get(i).getKey().equals(Command.OPEN)) {
-                Pair<Integer, Integer> entry = solve(i, commands, splitLines);
-                tmp.add(entry.getKey());
-                i = entry.getValue();
+                i = solve(i, commands, splitLines);
+                tmp.add(-1);
             } else {
                 tmp.add(commands.get(i).getValue());
             }
         }
-        return new Pair<>(-1, -1);
+        return -1;
     }
 
     public static ArrayList<Integer> split(ArrayList<String> lines) throws BracesNotMatchException {
@@ -74,11 +73,7 @@ public class Splitter {
         if (bracesCheck(commands)) {
             for (int i = 0; i < commands.size(); i++) {
                 if (commands.get(i).getKey().equals(Command.OPEN)) {
-                    Pair<Integer, Integer> sol = solve(i, commands, splitLines);
-                    if (sol.getKey() != -1) {
-                        splitLines.add(commands.get(i).getValue());
-                    }
-                    i = sol.getValue();
+                   i = solve(i, commands, splitLines);
                 } else {
                     splitLines.add(commands.get(i).getValue());
                 }

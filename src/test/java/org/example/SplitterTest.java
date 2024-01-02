@@ -11,13 +11,12 @@ import java.util.Scanner;
 public class SplitterTest extends TestCase {
 
     @Test
-    public void testSplitter() throws BracesNotMatchException, FileNotFoundException {
+    public void test1() throws BracesNotMatchException, FileNotFoundException {
         ArrayList<String> codeLines = new ArrayList<>();
         Scanner source = new Scanner(new File("test1.txt"));
         while (source.hasNext()) {
             codeLines.add(source.nextLine());
         }
-        source.close();
         ArrayList<Integer> output = Splitter.split(codeLines);
         ArrayList<Integer> correct = new ArrayList<>();
         correct.add(0);
@@ -31,6 +30,26 @@ public class SplitterTest extends TestCase {
         correct.add(27);
         correct.add(28);
         assertEquals(output, correct);
+        source.close();
+    }
+
+    @Test
+    public void test2() throws BracesNotMatchException, FileNotFoundException {
+        ArrayList<String> codeLines = new ArrayList<>();
+        Scanner source = new Scanner(new File("test2.txt"));
+        while (source.hasNext()) {
+            codeLines.add(source.nextLine());
+        }
+        ArrayList<Integer> output = Splitter.split(codeLines);
+        ArrayList<Integer> correct = new ArrayList<>();
+        correct.add(0);
+        correct.add(6);
+        correct.add(10);
+        correct.add(20);
+        correct.add(22);
+        correct.add(23);
+        assertEquals(output, correct);
+        source.close();
     }
 
 }

@@ -15,8 +15,9 @@ public class CodeAssessment {
         if (!splits.isEmpty()) {
             i = map.get(splits.get(splits.size() - 1)) + 1;
         }
-        for (; i < possibilities.size(); i++) {
+        while (i < possibilities.size()) {
             candidates.add(possibilities.get(i));
+            i++;
         }
         return candidates;
     }
@@ -59,10 +60,8 @@ public class CodeAssessment {
                     Pair<ArrayList<Integer>, Double> bestPair = backtrack(new ArrayList<>(), calculator, possibilities, codeLines, map);
                     splitLines.add(bestPair.getKey());
                     System.out.println(listOfFiles[i].getName() + " is done with " + bestPair.getValue() + " accuracy.");
-                } catch (OutOfMemoryError e) {
-                    System.out.println(listOfFiles[i].getName() + " is passed.");
                 } catch (BracesNotMatchException e) {
-                    throw new RuntimeException(e);
+                    System.out.println(listOfFiles[i].getName() + " is not done.");
                 }
             }
         }

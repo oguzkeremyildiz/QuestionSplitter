@@ -39,28 +39,51 @@ public class GenerateControlFlowGraphs {
         return commands;
     }
 
-    private static Pair<Integer, HashSet<ControlFlowNode>> ifOperator(ControlFlowGraph graph, ArrayList<Pair<Statement, Integer>> commands, int j) {
-        ControlFlowNode ifNode = new ControlFlowNode(commands.get(j).getValue());
-        HashSet<ControlFlowNode> nodes = new HashSet<>();
-        do {
-            j++;
-            Pair<Statement, Integer> command = commands.get(j);
-            ControlFlowNode node = new ControlFlowNode(command.getValue());
-            //graph.put(node);
-            if (command.getKey().equals(Statement.IF)) {
-                Pair<Integer, HashSet<ControlFlowNode>> p = ifOperator(graph, commands, j);
-                j = p.getKey();
-            } else if (command.getKey().equals(Statement.WHILE)) {
-
-            } else if (command.getKey().equals(Statement.FOR)) {
-
-            } else {
-
-            }
-        } while (!commands.get(j).getKey().equals(Statement.CLOSE));
+    private static Pair<Integer, HashSet<Integer>> generateGraph(ControlFlowGraph graph, ArrayList<Pair<Statement, Integer>> commands, int j) {
+        Statement statement = commands.get(j).getKey();
+        int head = commands.get(j).getValue();
+        HashSet<Integer> nodes = new HashSet<>();
+        nodes.add(head);
         j++;
-        if (commands.get(j).getKey().equals(Statement.ELSE)) {
-            
+        do {
+            Pair<Statement, Integer> command = commands.get(j);
+            int node = command.getValue();
+            for (int cur : nodes) {
+                graph.put(cur, node);
+            }
+            nodes.clear();
+            if (command.getKey().equals(Statement.NORMAL)) {
+                nodes.add(node);
+            } else {
+                Pair<Integer, HashSet<Integer>> pair = generateGraph(graph, commands, j);
+                j = pair.getKey();
+                nodes.addAll(pair.getValue());
+            }
+            j++;
+        } while (!commands.get(j).getKey().equals(Statement.CLOSE));
+        if (commands.size() > j + 1 && commands.get(j + 1).getKey().equals(Statement.ELSE)) {
+            graph.put(head, commands.get(j + 1).getValue());
+            Pair<Integer, HashSet<Integer>> pair = generateGraph(graph, commands, j + 1);
+            j = pair.getKey();
+            nodes.addAll(pair.getValue());
+        } else {
+            switch (statement) {
+                case IF:
+                    nodes.add(head);
+                    break;
+                case WHILE:
+                    for (Integer cur : nodes) {
+                        graph.put(cur, head);
+                    }
+                    nodes.clear();
+                    nodes.add(head);
+                    break;
+                case FOR:
+                    for (Integer cur : nodes) {
+                        graph.put(cur, head);
+                    }
+                    break;
+            }
         }
         return new Pair<>(j, nodes);
     }
@@ -80,19 +103,26 @@ public class GenerateControlFlowGraphs {
                 try {
                     ArrayList<Pair<Statement, Integer>> commands = createCommands(codeLines);
                     ControlFlowGraph graph = new ControlFlowGraph();
-                    //graph.addLeaf(new ControlFlowNode(0));
+                    HashSet<Integer> nodes = new HashSet<>();
+                    nodes.add(0);
                     for (int j = 0; j < commands.size(); j++) {
-                        Pair<Statement, Integer> command = commands.get(i);
+                        Pair<Statement, Integer> command = commands.get(j);
+                        int node = command.getValue();
+                        for (int cur : nodes) {
+                            graph.put(cur, node);
+                        }
+                        nodes.clear();
                         if (command.getKey().equals(Statement.NORMAL)) {
-                            ControlFlowNode node = new ControlFlowNode(command.getValue());
-                           // graph.put(node);
-                            //graph.setLast(node);
-                        } else if (command.getKey().equals(Statement.IF)) {
-                           // j = ifOperator(graph, commands, j);
+                            nodes.add(node);
+                        } else {
+                            Pair<Integer, HashSet<Integer>> pair = generateGraph(graph, commands, j);
+                            j = pair.getKey();
+                            nodes.addAll(pair.getValue());
                         }
                     }
                     graphs.add(graph);
                     System.out.println(listOfFiles[i].getName() + " is done.");
+                    //System.out.println(graph);
                 } catch (BracesNotMatchException e) {
                     System.out.println(listOfFiles[i].getName() + " is not done.");
                 }

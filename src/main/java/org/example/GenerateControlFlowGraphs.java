@@ -26,8 +26,11 @@ public class GenerateControlFlowGraphs {
             } else if (lines.get(i).contains("if")) {
                 open++;
                 commands.add(new Pair<>(Statement.IF, i));
+            } else if (lines.get(i).contains("for")) {
+                open++;
+                commands.add(new Pair<>(Statement.FOR, i));
             } else {
-                if (!lines.get(i).isEmpty()) {
+                if (!lines.get(i).isEmpty() && !lines.get(i).contains("}")) {
                     commands.add(new Pair<>(Statement.NORMAL, i));
                 }
             }

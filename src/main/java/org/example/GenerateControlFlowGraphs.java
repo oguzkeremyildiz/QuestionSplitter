@@ -45,6 +45,9 @@ public class GenerateControlFlowGraphs {
     private static Pair<Integer, HashSet<Integer>> generateGraph(ControlFlowGraph graph, ArrayList<Pair<Statement, Integer>> commands, int j) {
         Statement statement = commands.get(j).getKey();
         int head = commands.get(j).getValue();
+        if (statement.equals(Statement.IF)) {
+            graph.add(head);
+        }
         HashSet<Integer> nodes = new HashSet<>();
         nodes.add(head);
         j++;
@@ -65,7 +68,7 @@ public class GenerateControlFlowGraphs {
             j++;
         } while (!commands.get(j).getKey().equals(Statement.CLOSE));
         if (commands.size() > j + 1 && commands.get(j + 1).getKey().equals(Statement.ELSE)) {
-            graph.put(head, commands.get(j + 1).getValue());
+            graph.put(graph.get(), commands.get(j + 1).getValue());
             Pair<Integer, HashSet<Integer>> pair = generateGraph(graph, commands, j + 1);
             j = pair.getKey();
             nodes.addAll(pair.getValue());
@@ -73,6 +76,7 @@ public class GenerateControlFlowGraphs {
             switch (statement) {
                 case IF:
                     nodes.add(head);
+                    graph.pop();
                     break;
                 case WHILE:
                     for (Integer cur : nodes) {
@@ -125,7 +129,7 @@ public class GenerateControlFlowGraphs {
                     }
                     graphs.add(graph);
                     System.out.println(listOfFiles[i].getName() + " is done.");
-                    //System.out.println(graph);
+                    System.out.println(graph);
                 } catch (BracesNotMatchException e) {
                     System.out.println(listOfFiles[i].getName() + " is not done.");
                 }

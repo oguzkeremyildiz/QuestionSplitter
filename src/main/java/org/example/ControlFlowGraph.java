@@ -5,9 +5,10 @@ import java.util.*;
 public class ControlFlowGraph {
 
     private static HashMap<Integer, ArrayList<Integer>> graph;
-
+    private static Stack<Integer> ifStack;
     public ControlFlowGraph() {
         ControlFlowGraph.graph = new HashMap<>();
+        ControlFlowGraph.ifStack = new Stack<>();
     }
 
     public void put(int from, int to) {
@@ -15,6 +16,18 @@ public class ControlFlowGraph {
             graph.put(from, new ArrayList<>());
         }
         graph.get(from).add(to);
+    }
+
+    public void add(int node) {
+        ifStack.add(node);
+    }
+
+    public int get() {
+        return ifStack.peek();
+    }
+
+    public void pop() {
+        ifStack.pop();
     }
 
     @Override

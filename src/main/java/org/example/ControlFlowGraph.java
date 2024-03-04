@@ -2,47 +2,22 @@ package org.example;
 
 import java.util.*;
 
-public class ControlFlowGraph {
-
-    private static HashMap<Integer, ArrayList<Integer>> graph;
-    private static Stack<Integer> ifStack;
+public class ControlFlowGraph extends Graph {
+    private static Stack<String> ifStack;
     public ControlFlowGraph() {
-        ControlFlowGraph.graph = new HashMap<>();
+        super();
         ControlFlowGraph.ifStack = new Stack<>();
     }
 
-    public void put(int from, int to) {
-        if (!graph.containsKey(from)) {
-            graph.put(from, new ArrayList<>());
-        }
-        graph.get(from).add(to);
-    }
-
-    public void add(int node) {
+    public void add(String node) {
         ifStack.add(node);
     }
 
-    public int get() {
+    public String get() {
         return ifStack.peek();
     }
 
     public void pop() {
         ifStack.pop();
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder str = new StringBuilder();
-        for (int node : graph.keySet()) {
-            str.append(node).append(" Edges: \n");
-            for (int i = 0; i < graph.get(node).size(); i++) {
-                str.append(graph.get(node).get(i));
-                if (i + 1 != graph.get(node).size()) {
-                    str.append(", ");
-                }
-            }
-            str.append("\n");
-        }
-        return str.toString();
     }
 }

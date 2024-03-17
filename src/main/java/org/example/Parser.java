@@ -6,7 +6,7 @@ public class Parser {
 
     public static HashSet<Integer> types(String line) {
         HashSet<Integer> types = new HashSet<>();
-        if (line.contains("}")) {
+        if (isClose(line)) {
             types.add(0);
         }
         if (line.contains("if")) {
@@ -22,5 +22,13 @@ public class Parser {
             types.add(4);
         }
         return types;
+    }
+
+    public static boolean isOpen(String line) {
+        return line.contains("{");
+    }
+
+    public static boolean isClose(String line) {
+        return line.contains("}");
     }
 }

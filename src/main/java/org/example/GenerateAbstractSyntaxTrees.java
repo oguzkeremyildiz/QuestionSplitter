@@ -6,50 +6,47 @@ import java.util.*;
 
 public class GenerateAbstractSyntaxTrees {
 
-   /* private static int construct(int parent, Graph graph, String line, int j) {
-        int body = -1;
+    private static String construct(String parent, Graph graph, String line, int j) {
+        String fullLine = line + "-" + j;
+        String body = fullLine;
+        String condition;
         if (line.contains("if")) {
-            graph.put(parent, j * 2134);
-            graph.put(parent, j);
-            body = j;
+            condition = line.substring(line.indexOf("(") + 1, line.indexOf(")")) + "-" + j;
+            graph.put(parent, condition);
+            graph.put(parent, fullLine);
         } else if (line.contains("else")) {
-            graph.put(parent, j);
-            body = j;
-        } else if (line.contains("for")) {
-            graph.put(parent, j * 3124);
-            graph.put(j * 3124, j);
-            graph.put(j, j * 2134);
-            body = j * 1234;
-            graph.put(j, body);
-        } else if (line.contains("while")) {
-            graph.put(parent, j);
-            graph.put(j, j * 2134);
-            body = j * 1234;
-            graph.put(j, body);
+            graph.put(parent, fullLine);
+        } else if (line.contains("while") || line.contains("for")) {
+            condition = line.substring(line.indexOf("(") + 1, line.indexOf(")"))  + "-" + j;
+            graph.put(parent, fullLine);
+            graph.put(fullLine, condition);
+            body += "-branch";
+            graph.put(fullLine, body);
         }
         return body;
     }
 
-    private static int solve(int j, ArrayList<String> lines, Graph graph, int parent) {
-        int body = construct(parent, graph, lines.get(j), j);
+    private static int solve(int j, ArrayList<String> lines, Graph graph, String parent) {
+        String body = construct(parent, graph, lines.get(j), j);
         j++;
-        while (!lines.get(j).contains("}")) {
+        while (!lines.get(j).trim().equals("}")) {
             String cur = lines.get(j);
-            if (isNormal(cur)) {
-                graph.put(body, j);
+            HashSet<Integer> curTypes = Parser.types(cur);
+            if (isNormal(curTypes)) {
+                graph.put(body, cur + "-" + j);
+            } else if (curTypes.contains(2)) {
+                j = solve(j, lines, graph, parent);
+                break;
             } else {
                 j = solve(j, lines, graph, body);
             }
             j++;
         }
-        if (lines.get(j).contains("else")) {
-            return j - 1;
-        }
         return j;
     }
 
-    private static boolean isNormal(String line) {
-        return !line.contains("for") && !line.contains("else") && !line.contains("if") && !line.contains("while");
+    private static boolean isNormal(HashSet<Integer> types) {
+        return types.isEmpty();
     }
 
     public static ArrayList<Graph> generateGraphs(String folderName) throws FileNotFoundException, BracesNotMatchException {
@@ -76,11 +73,12 @@ public class GenerateAbstractSyntaxTrees {
                     throw new BracesNotMatchException(codeLines);
                 }
                 Graph graph = new Graph();
-                int parent = 0;
+                String parent = codeLines.get(0) + "-" + 0;
                 for (int j = 1; j < codeLines.size() - 1; j++) {
                     String line = codeLines.get(j);
-                    if (isNormal(line)) {
-                        graph.put(parent, j);
+                    HashSet<Integer> lineTypes = Parser.types(line);
+                    if (isNormal(lineTypes)) {
+                        graph.put(parent, line + "-" + j);
                     } else {
                         j = solve(j, codeLines, graph, parent);
                     }
@@ -91,5 +89,5 @@ public class GenerateAbstractSyntaxTrees {
             }
         }
         return graphs;
-    }*/
+    }
 }

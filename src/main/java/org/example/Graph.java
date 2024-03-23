@@ -20,11 +20,9 @@ public class Graph {
     public String toString() {
         StringBuilder str = new StringBuilder();
         for (String node : graph.keySet()) {
-            str.append(node).append(" Edges: \n");
             for (int i = 0; i < graph.get(node).size(); i++) {
-                str.append(graph.get(node).get(i)).append(",").append("\n");
+                str.append(node).append( " -> ").append(graph.get(node).get(i)).append("\n");
             }
-            str.append("\n");
         }
         return str.toString();
     }

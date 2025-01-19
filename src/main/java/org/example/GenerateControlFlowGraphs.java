@@ -113,19 +113,25 @@ public class GenerateControlFlowGraphs {
         ArrayList<ControlFlowGraph> graphs = new ArrayList<>();
         for (int i = 0; i < Objects.requireNonNull(listOfFiles).length; i++) {
             if (listOfFiles[i].isFile() && !listOfFiles[i].getName().equals("RefCode.java")) {
+                System.out.println(listOfFiles[i].getName());
                 ArrayList<String> codeLines = getStrings(listOfFiles[i]);
                 ControlFlowGraph graph = new ControlFlowGraph();
                 HashSet<String> nodes = new HashSet<>();
-                nodes.add(codeLines.get(0) + "-0");
-                int j = 1;
-                if (codeLines.get(j).trim().equals("{")) {
-                    j++;
+                if (!codeLines.isEmpty()) {
+                    if (codeLines.size() > 1) {
+                        nodes.add(codeLines.get(0) + "-0");
+                        int j = 1;
+                        if (codeLines.get(j).trim().equals("{")) {
+                            j++;
+                        }
+                        while (j < codeLines.size() - 1) {
+                            j = addNode(codeLines, j, graph, nodes) + 1;
+                        }
+                    } else {
+                        graph.add(codeLines.get(0) + "-0");
+                    }
+                    graphs.add(graph);
                 }
-                while (j < codeLines.size() - 1) {
-                    j = addNode(codeLines, j, graph, nodes) + 1;
-                }
-                graphs.add(graph);
-                System.out.println(listOfFiles[i].getName() + " is done.");
                 //System.out.println(graph);
             }
         }

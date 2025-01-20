@@ -36,17 +36,17 @@ public class LineConverter {
         for (Pair<Integer, LineType> pair : last) {
             if (pair.getValue().equals(LineType.CLOSE)) {
                 if (stack.isEmpty()) {
-                    return false;
+                    return true;
                 }
                 stack.pop();
             } else if (pair.getValue().equals(LineType.ELSE) || pair.getValue().equals(LineType.ELSE_IF) || pair.getValue().equals(LineType.IF) || pair.getValue().equals(LineType.FOR) || pair.getValue().equals(LineType.WHILE)) {
                 stack.add(pair.getValue());
             }
         }
-        return stack.isEmpty();
+        return !stack.isEmpty();
     }
 
-    public static ArrayList<ArrayList<Pair<Integer, LineType>>> convert(File file) throws FileNotFoundException {
+    public static ArrayList<ArrayList<Pair<Integer, LineType>>> convert(File file) throws FileNotFoundException, BracesNotMatchException {
         Scanner source = new Scanner(file);
         int index = 0;
         ArrayList<ArrayList<Pair<String, Integer>>> lines = new ArrayList<>();
@@ -63,11 +63,14 @@ public class LineConverter {
             }
             if (!lines.isEmpty()) {
                 if (!line.isBlank()) {
-                    lines.get(lines.size() - 1).add(new Pair<>(line, index));
+                    if (!line.trim().startsWith("//")) {
+                        lines.get(lines.size() - 1).add(new Pair<>(line, index));
+                    }
                 }
             }
         }
-        for (ArrayList<Pair<String, Integer>> line : lines) {
+        for (int k = 0; k < lines.size(); k++) {
+            ArrayList<Pair<String, Integer>> line = lines.get(k);
             types.add(new ArrayList<>());
             for (int j = 0; j < line.size(); j++) {
                 ArrayList<LineType> lineTypes = getTypes(line.get(j).getKey());
@@ -79,19 +82,26 @@ public class LineConverter {
                     types.get(types.size() - 1).add(new Pair<>(line.get(j).getValue(), lineType));
                 }
                 if (lineTypes.get(i).equals(LineType.FOR) || lineTypes.get(i).equals(LineType.IF) || lineTypes.get(i).equals(LineType.WHILE)) {
-                    if (line.get(j + 1).getKey().trim().equals("{")) {
+                    if (j + 1 != line.size() && line.get(j + 1).getKey().trim().equals("{")) {
                         j++;
                     } else {
                         if (!line.get(j).getKey().contains("{")) {
-                            j++;
+                            if (!line.get(j).getKey().contains(";")) {
+                                j++;
+                            }
                             types.get(types.size() - 1).add(new Pair<>(line.get(j).getValue(), LineType.STATEMENT));
                             types.get(types.size() - 1).add(new Pair<>(line.get(j).getValue(), LineType.CLOSE));
                         }
                     }
                 }
             }
+            if (k + 1 != lines.size()) {
+                if (check(types.get(types.size() - 1))) {
+                    throw new BracesNotMatchException();
+                }
+            }
         }
-        if (!check(types.get(types.size() - 1))) {
+        if (check(types.get(types.size() - 1))) {
             types.get(types.size() - 1).remove(types.get(types.size() - 1).get(types.get(types.size() - 1).size() - 1));
         }
         return types;

@@ -3,10 +3,14 @@ package org.example;
 import java.util.ArrayList;
 
 public class BracesNotMatchException extends Exception {
-    private ArrayList<String> lines;
+    private final ArrayList<String> lines;
 
     public BracesNotMatchException(ArrayList<String> lines) {
         this.lines = lines;
+    }
+
+    public BracesNotMatchException() {
+        this.lines = new ArrayList<>();
     }
 
     public String toString() {

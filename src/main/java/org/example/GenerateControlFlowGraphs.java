@@ -97,18 +97,22 @@ public class GenerateControlFlowGraphs {
         for (int i = 0; i < Objects.requireNonNull(listOfFiles).length; i++) {
             if (listOfFiles[i].isFile() && !listOfFiles[i].getName().equals("RefCode.java") && !listOfFiles[i].getName().contains(".DS_Store")) {
                 File file = listOfFiles[i];
-                System.out.println(file.getName());
-                ArrayList<ArrayList<Pair<Integer, LineType>>> lines = LineConverter.convert(file);
-                ArrayList<Graph> graph = new ArrayList<>();
-                for (ArrayList<Pair<Integer, LineType>> line : lines) {
-                    Graph current = new Graph();
-                    String prev = "start-0";
-                    while (!line.isEmpty()) {
-                        prev = addNode(prev, current, line);
+                //System.out.println(file.getName());
+                try {
+                    ArrayList<ArrayList<Pair<Integer, LineType>>> lines = LineConverter.convert(file);
+                    ArrayList<Graph> graph = new ArrayList<>();
+                    for (ArrayList<Pair<Integer, LineType>> line : lines) {
+                        Graph current = new Graph();
+                        String prev = "start-0";
+                        while (!line.isEmpty()) {
+                            prev = addNode(prev, current, line);
+                        }
+                        graph.add(current.clone());
                     }
-                    graph.add(current.clone());
+                    graphs.add((ArrayList<Graph>) graph.clone());
+                } catch (BracesNotMatchException exception) {
+                    System.out.println(file.getName() + " not done.");
                 }
-                graphs.add((ArrayList<Graph>) graph.clone());
             }
         }
         return graphs;

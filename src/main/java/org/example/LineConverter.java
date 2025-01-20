@@ -81,7 +81,7 @@ public class LineConverter {
                 for (LineType lineType : lineTypes) {
                     types.get(types.size() - 1).add(new Pair<>(line.get(j).getValue(), lineType));
                 }
-                if (lineTypes.get(i).equals(LineType.FOR) || lineTypes.get(i).equals(LineType.IF) || lineTypes.get(i).equals(LineType.WHILE)) {
+                if (lineTypes.get(i).equals(LineType.FOR) || lineTypes.get(i).equals(LineType.IF) || lineTypes.get(i).equals(LineType.WHILE) || lineTypes.get(i).equals(LineType.ELSE_IF) || lineTypes.get(i).equals(LineType.ELSE)) {
                     if (j + 1 != line.size() && line.get(j + 1).getKey().trim().equals("{")) {
                         j++;
                     } else {

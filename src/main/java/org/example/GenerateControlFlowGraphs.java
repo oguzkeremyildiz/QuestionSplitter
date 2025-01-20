@@ -5,134 +5,110 @@ import java.util.*;
 
 public class GenerateControlFlowGraphs {
 
-    private static int addNode(ArrayList<String> codeLines, int j, ControlFlowGraph graph, HashSet<String> nodes) {
-        String node = codeLines.get(j);
-        for (String cur : nodes) {
-            graph.put(cur, node + "-" + j);
+    private static boolean condition(ArrayList<Pair<Integer, LineType>> line, ArrayList<String> lasts, String prev) {
+        if (line.get(0).getValue().equals(LineType.CLOSE)) {
+            lasts.add(prev);
+            return line.size() > 1 && (line.get(1).getValue().equals(LineType.ELSE_IF) || line.get(1).getValue().equals(LineType.ELSE));
         }
-        nodes.clear();
-        HashSet<Integer> types = Parser.types(codeLines.get(j));
-        if (types.isEmpty()) {
-            nodes.add(node + "-" + j);
-        } else {
-            Pair<Integer, HashSet<String>> pair = generateGraph(graph, codeLines, j);
-            j = pair.getKey();
-            nodes.addAll(pair.getValue());
-        }
-        return j;
+        return true;
     }
 
-    private static String findHead(ArrayList<String> codeLines, HashSet<Integer> headTypes, ControlFlowGraph graph, int headIndex) {
-        String head;
-        if (headTypes.contains(2)) {
-            head = graph.get();
-        } else {
-            head = codeLines.get(headIndex) + "-" + headIndex;
-            if (headTypes.contains(1)) {
-                graph.add(head);
-            }
-        }
-        return head;
-    }
-
-    private static void addGraph(ControlFlowGraph graph, HashSet<Integer> headTypes, String head, HashSet<String> nodes) {
-        if (headTypes.contains(1) && headTypes.size() == 1) {
-            if (!graph.isJustElse()) {
-                nodes.add(head);
-            } else {
-                graph.change();
-            }
-            graph.pop();
-        } else if (headTypes.contains(3)) {
-            for (String cur : nodes) {
-                graph.put(cur, head);
-            }
-            nodes.clear();
-            nodes.add(head);
-        } else if (headTypes.contains(4)) {
-            for (String cur : nodes) {
-                graph.put(cur, head);
-            }
-        }
-    }
-
-    private static Pair<Integer, HashSet<String>> generateGraph(ControlFlowGraph graph, ArrayList<String> codeLines, int j) {
-        HashSet<Integer> headTypes = Parser.types(codeLines.get(j));
-        HashSet<String> nodes = new HashSet<>();
-        HashSet<Integer> types;
-        String head = findHead(codeLines, headTypes, graph, j);
-        nodes.add(head);
-        j++;
-        do {
-            j = addNode(codeLines, j, graph, nodes) + 1;
-            types = Parser.types(codeLines.get(j));
-        } while (!types.contains(0));
-        int check = j;
-        if (types.size() == 1) {
-            check++;
-        }
-        if (codeLines.size() > check) {
-            HashSet<Integer> checkTypes = Parser.types(codeLines.get(check));
-            if (checkTypes.contains(2)) {
-                if (!checkTypes.contains(1)) {
-                    graph.change();
+    private static String ifStatement(String prev, Graph graph, ArrayList<Pair<Integer, LineType>> line) {
+        String first = prev;
+        ArrayList<String> lasts = new ArrayList<>();
+        boolean isThereAnElse = false;
+        while (condition(line, lasts, prev)) {
+            if (line.get(0).getValue().equals(LineType.CLOSE)) {
+                prev = first;
+                line.remove(0);
+                if (line.get(0).getValue().equals(LineType.ELSE)) {
+                    isThereAnElse = true;
                 }
-                Pair<Integer, HashSet<String>> pair = generateGraph(graph, codeLines, check);
-                j = pair.getKey();
-                nodes.addAll(pair.getValue());
+                line.remove(0);
             }
+            prev = addNode(prev, graph, line);
         }
-        addGraph(graph, headTypes, head, nodes);
-        return new Pair<>(j, nodes);
+        line.remove(0);
+        String end = "end-" + first;
+        for (String last : lasts) {
+            graph.put(last, end);
+        }
+        if (!isThereAnElse) {
+            graph.put(first, end);
+        }
+        return end;
     }
 
-    private static ArrayList<String> getStrings(File listOfFiles) throws FileNotFoundException, BracesNotMatchException {
-        int open = 0, close = 0;
-        ArrayList<String> codeLines = new ArrayList<>();
-        Scanner source = new Scanner(listOfFiles);
-        while (source.hasNext()) {
-            String line = source.nextLine();
-            codeLines.add(line);
-            if (Parser.isOpen(line)) {
-                open++;
-            }
-            if (Parser.isClose(line)) {
-                close++;
-            }
+    private static String forStatement(String prev, Graph graph, ArrayList<Pair<Integer, LineType>> line) {
+        String first = prev;
+        while (!line.get(0).getValue().equals(LineType.CLOSE)) {
+            prev = addNode(prev, graph, line);
         }
-        source.close();
-        if (open != close) {
-            throw new BracesNotMatchException(codeLines);
-        }
-        return codeLines;
+        line.remove(0);
+        graph.put(prev, first);
+        return prev;
     }
 
-    public static ArrayList<ControlFlowGraph> generateGraphs(String folderName) throws FileNotFoundException, BracesNotMatchException {
+    private static String whileStatement(String prev, Graph graph, ArrayList<Pair<Integer, LineType>> line) {
+        String first = prev;
+        while (!line.get(0).getValue().equals(LineType.CLOSE)) {
+            prev = addNode(prev, graph, line);
+        }
+        line.remove(0);
+        graph.put(prev, first);
+        return first;
+    }
+    
+    private static String addNode(String prev, Graph graph, ArrayList<Pair<Integer, LineType>> line) {
+        Pair<Integer, LineType> pair = line.remove(0);
+        String cur;
+        switch (pair.getValue()) {
+            case IF:
+                cur = "if-" + pair.getKey();
+                graph.put(prev, cur);
+                prev = cur;
+                return ifStatement(prev, graph, line);
+            case STATEMENT:
+                cur = "statement-" + pair.getKey();
+                graph.put(prev, cur);
+                return cur;
+            case FOR:
+                cur = "for-" + pair.getKey();
+                graph.put(prev, cur);
+                prev = cur;
+                return forStatement(prev, graph, line);
+            case WHILE:
+                cur = "while-" + pair.getKey();
+                graph.put(prev, cur);
+                prev = cur;
+                return whileStatement(prev, graph, line);
+        }
+        return "null";
+    }
+
+    public static ArrayList<ArrayList<Graph>> generateGraphs(String folderName) throws FileNotFoundException {
         File folder = new File(folderName);
+        return generateGraphs(folder);
+    }
+
+    public static ArrayList<ArrayList<Graph>> generateGraphs(File folder) throws FileNotFoundException {
         File[] listOfFiles = folder.listFiles();
-        ArrayList<ControlFlowGraph> graphs = new ArrayList<>();
+        ArrayList<ArrayList<Graph>> graphs = new ArrayList<>();
         for (int i = 0; i < Objects.requireNonNull(listOfFiles).length; i++) {
-            if (listOfFiles[i].isFile() && !listOfFiles[i].getName().equals("RefCode.java")) {
-                System.out.println(listOfFiles[i].getName());
-                ArrayList<String> codeLines = getStrings(listOfFiles[i]);
-                ControlFlowGraph graph = new ControlFlowGraph();
-                HashSet<String> nodes = new HashSet<>();
-                if (!codeLines.isEmpty()) {
-                    if (codeLines.size() > 1) {
-                        nodes.add(codeLines.get(0) + "-0");
-                        int j = 1;
-                        if (codeLines.get(j).trim().equals("{")) {
-                            j++;
-                        }
-                        while (j < codeLines.size() - 1) {
-                            j = addNode(codeLines, j, graph, nodes) + 1;
-                        }
-                    } else {
-                        graph.add(codeLines.get(0) + "-0");
+            if (listOfFiles[i].isFile() && !listOfFiles[i].getName().equals("RefCode.java") && !listOfFiles[i].getName().contains(".DS_Store")) {
+                File file = listOfFiles[i];
+                System.out.println(file.getName());
+                ArrayList<ArrayList<Pair<Integer, LineType>>> lines = LineConverter.convert(file);
+                ArrayList<Graph> graph = new ArrayList<>();
+                for (ArrayList<Pair<Integer, LineType>> line : lines) {
+                    Graph current = new Graph();
+                    String prev = "start-0";
+                    while (!line.isEmpty()) {
+                        prev = addNode(prev, current, line);
                     }
-                    graphs.add(graph);
+                    graph.add(current.clone());
                 }
-                //System.out.println(graph);
+                graphs.add((ArrayList<Graph>) graph.clone());
             }
         }
         return graphs;

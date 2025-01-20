@@ -4,9 +4,10 @@ import java.util.*;
 
 public class Graph {
 
-    private static HashMap<String, ArrayList<String>> graph;
+    private final HashMap<String, ArrayList<String>> graph;
+
     public Graph() {
-        Graph.graph = new HashMap<>();
+        this.graph = new HashMap<>();
     }
 
     public void put(String from, String to) {
@@ -25,5 +26,15 @@ public class Graph {
             }
         }
         return str.toString();
+    }
+
+    public Graph clone() {
+        Graph graph = new Graph();
+        for (String key : this.graph.keySet()) {
+            for (String value : this.graph.get(key)) {
+                graph.put(key, value);
+            }
+        }
+        return graph;
     }
 }

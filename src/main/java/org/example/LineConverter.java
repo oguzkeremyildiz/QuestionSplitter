@@ -46,8 +46,6 @@ public class LineConverter {
         return !stack.isEmpty();
     }
 
-    // satırda statementtan sonra comment satırında keywordler varsa çalışmıyor.
-
     public static ArrayList<ArrayList<Pair<Integer, LineType>>> convert(File file) throws FileNotFoundException, BracesNotMatchException {
         Scanner source = new Scanner(file);
         int index = 0;
@@ -63,11 +61,13 @@ public class LineConverter {
                     index++;
                 }
             }
+            int check = line.indexOf("//");
+            if (check != -1) {
+                line = line.substring(0, check);
+            }
             if (!lines.isEmpty()) {
                 if (!line.isBlank()) {
-                    if (!line.trim().startsWith("//")) {
-                        lines.get(lines.size() - 1).add(new Pair<>(line, index));
-                    }
+                    lines.get(lines.size() - 1).add(new Pair<>(line, index));
                 }
             }
         }

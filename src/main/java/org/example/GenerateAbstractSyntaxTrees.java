@@ -10,14 +10,15 @@ public class GenerateAbstractSyntaxTrees {
         String fullLine = line + "-" + j;
         String body = fullLine;
         String condition;
+        String s = line.substring(line.indexOf("(") + 1, line.indexOf(")")) + "-" + j;
         if (line.contains("if")) {
-            condition = line.substring(line.indexOf("(") + 1, line.indexOf(")")) + "-" + j;
+            condition = s;
             graph.put(parent, condition);
             graph.put(parent, fullLine);
         } else if (line.contains("else")) {
             graph.put(parent, fullLine);
         } else if (line.contains("while") || line.contains("for")) {
-            condition = line.substring(line.indexOf("(") + 1, line.indexOf(")"))  + "-" + j;
+            condition = s;
             graph.put(parent, fullLine);
             graph.put(fullLine, condition);
             body += "-branch";
@@ -50,43 +51,47 @@ public class GenerateAbstractSyntaxTrees {
     }
 
     public static ArrayList<Graph> generateGraphs(String folderName) throws FileNotFoundException, BracesNotMatchException {
-        File folder = new File(folderName);
-        File[] listOfFiles = folder.listFiles();
         ArrayList<Graph> graphs = new ArrayList<>();
-        for (int i = 0; i < Objects.requireNonNull(listOfFiles).length; i++) {
-            if (listOfFiles[i].isFile() && !listOfFiles[i].getName().equals("RefCode.java")) {
-                ArrayList<String> codeLines = new ArrayList<>();
-                Scanner source = new Scanner(listOfFiles[i]);
-                int open = 0, close = 0;
-                while (source.hasNext()) {
-                    String cur = source.nextLine();
-                    codeLines.add(cur);
-                    if (cur.contains("{")) {
-                        open++;
+        if (!folderName.contains(".DS_Store")) {
+            File folder = new File(folderName);
+            File[] listOfFiles = folder.listFiles();
+            for (int i = 0; i < Objects.requireNonNull(listOfFiles).length; i++) {
+                if (!listOfFiles[i].getName().contains(".DS_Store") && listOfFiles[i].isFile() && !listOfFiles[i].getName().equals("RefCode.java")) {
+                    ArrayList<String> codeLines = new ArrayList<>();
+                    Scanner source = new Scanner(listOfFiles[i]);
+                    int open = 0, close = 0;
+                    while (source.hasNext()) {
+                        String cur = source.nextLine();
+                        codeLines.add(cur);
+                        if (cur.contains("{")) {
+                            open++;
+                        }
+                        if (cur.contains("}")) {
+                            close++;
+                        }
                     }
-                    if (cur.contains("}")) {
-                        close++;
+                    source.close();
+                    if (open != close) {
+                        throw new BracesNotMatchException(codeLines);
                     }
-                }
-                source.close();
-                if (open != close) {
-                    throw new BracesNotMatchException(codeLines);
-                }
-                Graph graph = new Graph();
-                String parent = codeLines.get(0) + "-" + 0;
-                for (int j = 1; j < codeLines.size() - 1; j++) {
-                    String line = codeLines.get(j);
-                    HashSet<Integer> lineTypes = Parser.types(line);
-                    if (isNormal(lineTypes)) {
-                        graph.put(parent, line + "-" + j);
-                    } else {
-                        j = solve(j, codeLines, graph, parent);
+                    Graph graph = new Graph();
+                    String parent = codeLines.get(0) + "-" + 0;
+                    for (int j = 1; j < codeLines.size() - 1; j++) {
+                        String line = codeLines.get(j);
+                        HashSet<Integer> lineTypes = Parser.types(line);
+                        if (isNormal(lineTypes)) {
+                            graph.put(parent, line + "-" + j);
+                        } else {
+                            j = solve(j, codeLines, graph, parent);
+                        }
                     }
+                    graphs.add(graph);
+                    System.out.println(listOfFiles[i].getName() + " is done.");
+                    //System.out.println(graph);
                 }
-                graphs.add(graph);
-                System.out.println(listOfFiles[i].getName() + " is done.");
-                //System.out.println(graph);
             }
+        } else {
+            System.out.println("File is a .DS_Store");
         }
         return graphs;
     }

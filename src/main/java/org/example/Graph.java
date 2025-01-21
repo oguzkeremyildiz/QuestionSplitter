@@ -4,7 +4,7 @@ import java.util.*;
 
 public class Graph {
 
-    private final HashMap<String, ArrayList<String>> graph;
+    private final HashMap<String, HashSet<String>> graph;
 
     public Graph() {
         this.graph = new HashMap<>();
@@ -12,7 +12,7 @@ public class Graph {
 
     public void put(String from, String to) {
         if (!graph.containsKey(from)) {
-            graph.put(from, new ArrayList<>());
+            graph.put(from, new HashSet<>());
         }
         graph.get(from).add(to);
     }
@@ -21,8 +21,8 @@ public class Graph {
     public String toString() {
         StringBuilder str = new StringBuilder();
         for (String node : graph.keySet()) {
-            for (int i = 0; i < graph.get(node).size(); i++) {
-                str.append(node).append( " -> ").append(graph.get(node).get(i)).append("\n");
+            for (String key : graph.get(node)) {
+                str.append(node).append( " -> ").append(key).append("\n");
             }
         }
         return str.toString();

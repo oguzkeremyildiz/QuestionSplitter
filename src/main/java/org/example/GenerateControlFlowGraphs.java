@@ -26,7 +26,9 @@ public class GenerateControlFlowGraphs {
                 }
                 line.remove(0);
             }
-            prev = addNode(prev, graph, line);
+            if (!line.get(0).getValue().equals(LineType.CLOSE)) {
+                prev = addNode(prev, graph, line);
+            }
         }
         line.remove(0);
         String end = "end-" + first;

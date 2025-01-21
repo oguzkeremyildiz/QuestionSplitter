@@ -6,19 +6,18 @@ import java.util.*;
 
 public class GenerateAbstractSyntaxTrees {
 
-    private static String construct(String parent, Graph graph, String line, int j) {
+    private static String construct(String parent, Graph graph, String line, int j, LineType lineType) {
         String fullLine = line + "-" + j;
         String body = fullLine;
         String condition;
-        String s = line.substring(line.indexOf("(") + 1, line.indexOf(")")) + "-" + j;
-        if (line.contains("if")) {
-            condition = s;
+        if (lineType.equals(LineType.IF) || lineType.equals(LineType.ELSE_IF)) {
+            condition = line.substring(line.indexOf("(") + 1, line.indexOf(")")) + "-" + j;
             graph.put(parent, condition);
             graph.put(parent, fullLine);
-        } else if (line.contains("else")) {
+        } else if (lineType.equals(LineType.ELSE)) {
             graph.put(parent, fullLine);
-        } else if (line.contains("while") || line.contains("for")) {
-            condition = s;
+        } else if (lineType.equals(LineType.WHILE) || lineType.equals(LineType.FOR)) {
+            condition = line.substring(line.indexOf("(") + 1, line.indexOf(")")) + "-" + j;
             graph.put(parent, fullLine);
             graph.put(fullLine, condition);
             body += "-branch";
@@ -27,72 +26,80 @@ public class GenerateAbstractSyntaxTrees {
         return body;
     }
 
-    private static int solve(int j, ArrayList<String> lines, Graph graph, String parent) {
-        String body = construct(parent, graph, lines.get(j), j);
+    private static boolean condition(int j, ArrayList<Pair<Integer, LineType>> lines) {
+        if (lines.get(j).getValue().equals(LineType.CLOSE)) {
+            return j + 1 != lines.size() && (lines.get(j + 1).getValue().equals(LineType.ELSE_IF) || lines.get(j + 1).getValue().equals(LineType.ELSE));
+        }
+        return true;
+    }
+
+    private static int solve(int j, ArrayList<Pair<Integer, LineType>> lines, Graph graph, String parent, HashMap<Integer, String> map) {
+        String body = construct(parent, graph, map.get(lines.get(j).getKey()), j, lines.get(j).getValue());
         j++;
-        while (!lines.get(j).trim().equals("}")) {
-            String cur = lines.get(j);
-            HashSet<Integer> curTypes = Parser.types(cur);
-            if (isNormal(curTypes)) {
-                graph.put(body, cur + "-" + j);
-            } else if (curTypes.contains(2)) {
-                j = solve(j, lines, graph, parent);
-                break;
-            } else {
-                j = solve(j, lines, graph, body);
+        while (condition(j, lines)) {
+            if (lines.get(j).getValue().equals(LineType.CLOSE)) {
+                j++;
             }
-            j++;
+            LineType cur = lines.get(j).getValue();
+            if (cur.equals(LineType.STATEMENT)) {
+                graph.put(body, cur + "-" + j);
+                j++;
+            } else if (cur.equals(LineType.ELSE) || cur.equals(LineType.ELSE_IF)) {
+                j = solve(j, lines, graph, parent, map);
+            } else {
+                j = solve(j, lines, graph, body, map);
+                j++;
+            }
         }
         return j;
     }
 
-    private static boolean isNormal(HashSet<Integer> types) {
-        return types.isEmpty();
+    private static HashMap<Integer, String> createMap(File file) throws FileNotFoundException {
+        HashMap<Integer, String> map = new HashMap<>();
+        Scanner scanner = new Scanner(file);
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            map.put(map.size() + 1, line);
+        }
+        scanner.close();
+        return map;
     }
 
-    public static ArrayList<Graph> generateGraphs(String folderName) throws FileNotFoundException, BracesNotMatchException {
-        ArrayList<Graph> graphs = new ArrayList<>();
-        if (!folderName.contains(".DS_Store")) {
-            File folder = new File(folderName);
-            File[] listOfFiles = folder.listFiles();
-            for (int i = 0; i < Objects.requireNonNull(listOfFiles).length; i++) {
-                if (!listOfFiles[i].getName().contains(".DS_Store") && listOfFiles[i].isFile() && !listOfFiles[i].getName().equals("RefCode.java")) {
-                    ArrayList<String> codeLines = new ArrayList<>();
-                    Scanner source = new Scanner(listOfFiles[i]);
-                    int open = 0, close = 0;
-                    while (source.hasNext()) {
-                        String cur = source.nextLine();
-                        codeLines.add(cur);
-                        if (cur.contains("{")) {
-                            open++;
+    public static ArrayList<ArrayList<Graph>> generateGraphs(File folder) throws FileNotFoundException {
+        ArrayList<ArrayList<Graph>> graphs = new ArrayList<>();
+        File[] listOfFiles = folder.listFiles();
+        for (int i = 0; i < Objects.requireNonNull(listOfFiles).length; i++) {
+            if (!listOfFiles[i].getName().contains(".DS_Store") && listOfFiles[i].isFile() && !listOfFiles[i].getName().contains("RefCode")) {
+                File file = listOfFiles[i];
+                //System.out.println(file.getName());
+                try {
+                    HashMap<Integer, String> map = createMap(file);
+                    ArrayList<ArrayList<Pair<Integer, LineType>>> lines = LineConverter.convert(file);
+                    ArrayList<Graph> graph = new ArrayList<>();
+                    for (ArrayList<Pair<Integer, LineType>> assessment : lines) {
+                        Graph g = new Graph();
+                        String parent = "start";
+                        for (int j = 0; j < assessment.size(); j++) {
+                            if (assessment.get(j).getValue().equals(LineType.STATEMENT)) {
+                                g.put(parent, LineType.STATEMENT + "-" + assessment.get(j).getKey());
+                            } else {
+                                j = solve(j, assessment, g, parent, map);
+                            }
                         }
-                        if (cur.contains("}")) {
-                            close++;
-                        }
+                        graph.add(g.clone());
                     }
-                    source.close();
-                    if (open != close) {
-                        throw new BracesNotMatchException(codeLines);
-                    }
-                    Graph graph = new Graph();
-                    String parent = codeLines.get(0) + "-" + 0;
-                    for (int j = 1; j < codeLines.size() - 1; j++) {
-                        String line = codeLines.get(j);
-                        HashSet<Integer> lineTypes = Parser.types(line);
-                        if (isNormal(lineTypes)) {
-                            graph.put(parent, line + "-" + j);
-                        } else {
-                            j = solve(j, codeLines, graph, parent);
-                        }
-                    }
-                    graphs.add(graph);
-                    System.out.println(listOfFiles[i].getName() + " is done.");
-                    //System.out.println(graph);
+                    graphs.add((ArrayList<Graph>) graph.clone());
+                } catch (BracesNotMatchException e) {
+                    System.out.println(file.getName() + " not done.");
                 }
             }
-        } else {
-            System.out.println("File is a .DS_Store");
         }
         return graphs;
+    }
+
+    public static ArrayList<ArrayList<Graph>> generateGraphs(String folderName) throws FileNotFoundException {
+        ArrayList<ArrayList<Graph>> graphs = new ArrayList<>();
+        File folder = new File(folderName);
+        return generateGraphs(folder);
     }
 }

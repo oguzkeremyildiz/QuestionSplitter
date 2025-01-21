@@ -46,6 +46,8 @@ public class LineConverter {
         return !stack.isEmpty();
     }
 
+    // satırda statementtan sonra comment satırında keywordler varsa çalışmıyor.
+
     public static ArrayList<ArrayList<Pair<Integer, LineType>>> convert(File file) throws FileNotFoundException, BracesNotMatchException {
         Scanner source = new Scanner(file);
         int index = 0;
@@ -69,6 +71,7 @@ public class LineConverter {
                 }
             }
         }
+        source.close();
         for (int k = 0; k < lines.size(); k++) {
             ArrayList<Pair<String, Integer>> line = lines.get(k);
             types.add(new ArrayList<>());

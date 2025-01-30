@@ -17,11 +17,11 @@ public class LineConverter {
             } else {
                 types.add(LineType.ELSE);
             }
-        } else if (line.contains("if")) {
+        } else if (line.contains("if") && line.contains("(")) {
             types.add(LineType.IF);
-        } else if (line.contains("for")) {
+        } else if (line.contains("for") && line.contains("(")) {
             types.add(LineType.FOR);
-        } else if (line.contains("while")) {
+        } else if (line.contains("while") && line.contains("(")) {
             types.add(LineType.WHILE);
         } else {
             if (types.isEmpty()) {
@@ -54,13 +54,15 @@ public class LineConverter {
         while (source.hasNextLine()) {
             String line = source.nextLine();
             index++;
-            if (line.contains("/** ASSESSMENT")) {
-                lines.add(new ArrayList<>());
-                for (int i = 0; i < 4; i++) {
-                    line = source.nextLine();
-                    index++;
+            do {
+                if (line.contains("/** ASSESSMENT")) {
+                    lines.add(new ArrayList<>());
+                    for (int i = 0; i < 4; i++) {
+                        line = source.nextLine();
+                        index++;
+                    }
                 }
-            }
+            } while (line.contains("/** ASSESSMENT"));
             int check = line.indexOf("//");
             if (check != -1) {
                 line = line.substring(0, check);

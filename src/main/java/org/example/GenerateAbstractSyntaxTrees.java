@@ -89,7 +89,7 @@ public class GenerateAbstractSyntaxTrees {
                         graph.add(g.clone());
                     }
                     graphs.add((ArrayList<Graph>) graph.clone());
-                } catch (BracesNotMatchException e) {
+                } catch (Exception e) {
                     System.out.println(file.getName() + " not done.");
                 }
             }
